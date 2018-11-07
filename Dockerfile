@@ -1,7 +1,4 @@
-FROM alpine:3.6
-
-# Uncomment if local sources
-# COPY ./MTProxy /mtproxy/sources
+FROM alpine:3.8 AS builder
 
 COPY ./patches /mtproxy/patches
 
@@ -9,7 +6,10 @@ RUN apk add --no-cache --virtual .build-deps \
       git make gcc musl-dev linux-headers openssl-dev \
     && git clone --single-branch --depth 1 https://github.com/TelegramMessenger/MTProxy.git /mtproxy/sources \
     && cd /mtproxy/sources \
-    && patch -p0 -i /mtproxy/patches/randr_compat.patch \
+    && echo "Patch [randr_compat]:" \
+    && patch -p0 -i /mtproxy/patches/01-randr_compat.patch \
+    && echo "Patch [timer]:" \
+    && patch -p1 -i /mtproxy/patches/02-timer.patch \
     && make -j$(getconf _NPROCESSORS_ONLN)
     # Let's skip all cleaning stuff for faster build
     # && cp /mtproxy/sources/objs/bin/mtproto-proxy /mtproxy/ \
@@ -17,13 +17,11 @@ RUN apk add --no-cache --virtual .build-deps \
     # && apk add --virtual .rundeps libcrypto1.0 \
     # && apk del .build-deps
 
-FROM alpine:3.6
-LABEL maintainer="Alex Doe <alex@doe.sh>" \
+FROM alpine:3.8
+LABEL maintainer="Evgeniy Kulikov <im@kulikov.im>" \
       description="Telegram Messenger MTProto zero-configuration proxy server."
 
-RUN apk add --no-cache curl \
-  && ln -s /usr/lib/libcrypto.so.41 /usr/lib/libcrypto.so.1.0.0
-  # alpine:3.7 will need symlink to libcrypto.so.42
+RUN apk add --no-cache libcrypto1.0 curl
 
 WORKDIR /mtproxy
 
