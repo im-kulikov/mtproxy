@@ -3,6 +3,10 @@ if [ ! -z "$DEBUG" ]; then set -x; fi
 mkdir /data 2>/dev/null >/dev/null
 RANDOM=$(printf "%d" "0x$(head -c4 /dev/urandom | od -t x1 -An | tr -d ' ')")
 
+if [ -z "$USER" ]; then
+  USER=root
+fi
+
 if [ -z "$WORKERS" ]; then
   WORKERS=2
 fi
@@ -112,4 +116,4 @@ echo '[+] Starting proxy...'
 sleep 1
 
 # exec /mtproxy/mtproto-proxy -p 2398 -H 443 -M "$WORKERS" -C 60000 --aes-pwd /etc/telegram/hello-explorers-how-are-you-doing -u root $CONFIG --allow-skip-dh --nat-info "$INTERNAL_IP:$IP" $SECRET_CMD $TAG_CMD
-exec /mtproxy/mtproto-proxy "$@" --aes-pwd ${REMOTE_SECRET} --user root ${REMOTE_CONFIG} --nat-info "$INTERNAL_IP:$EXTERNAL_IP" ${SECRET_CMD} ${TAG_CMD}
+exec /mtproxy/mtproto-proxy "$@" --aes-pwd ${REMOTE_SECRET} --user ${USER} ${REMOTE_CONFIG} --nat-info "$INTERNAL_IP:$EXTERNAL_IP" ${SECRET_CMD} ${TAG_CMD}
